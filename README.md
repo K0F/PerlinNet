@@ -1,8 +1,6 @@
 # PerlinNet
 
-
-```markdown
-# Perlin Noise Generator from Unix Time
+_Perlin Noise Generator from Unix Time_
 
 This Go program demonstrates generating Perlin noise based on Unix time. Perlin noise is a type of coherent noise that can be used for various applications, such as procedural terrain generation, procedural texture synthesis, networked live perfomances, and more!
 
@@ -56,7 +54,3 @@ Contributions are welcome! If you have any suggestions, improvements, or bug fix
 ## License
 
 This project is licensed under the [GNU Licence](LICENSE).
-
-```
-
-Feel free to adjust the content and sections according to your needs. Make sure to replace the placeholders with the actual project information and update the installation instructions accordingly.
