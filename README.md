@@ -6,7 +6,7 @@ This Go program demonstrates generating Perlin noise based on Unix time. Perlin 
 
 This program uses OSC protocol to distribute value to localhost. Network distribution in next release.
 
-You can run it on multiple places at one and as far as you have same time on machines it will produce very similar same series live.
+You can run it on multiple places at one and as far as you have same time on machines it will produce very similar series live.
 
 
 ## Prerequisites
