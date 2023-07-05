@@ -43,6 +43,8 @@ You can run it on multiple places at once and as far as you have same time on ma
 
 ## Example Output
 
+[![asciicast](https://asciinema.org/a/594838.svg)](https://asciinema.org/a/594838)
+
 ```
 time: 1685983141.799818, value: -0.291815
 time: 1685983141.816417, value: -0.283964
