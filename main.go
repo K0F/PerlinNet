@@ -27,7 +27,7 @@ func main() {
 	}
 	// Set the seed for random number generation
 	rand.New(rand.NewSource(int64(time.Now().Year())))
-	//rand.Seed(int64(start.Year()))
+	rand.Seed(int64(time.Now().Year()))
 
 	client := osc.NewClient("127.0.0.1", *port)
 
