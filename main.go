@@ -19,7 +19,7 @@ func main() {
 
 	flag.Parse()
 
-	response, err := ntp.Query("0.beevik-ntp.pool.ntp.org")
+	response, err := ntp.Query("0.cz.pool.ntp.org")
 	if err != nil {
 		fmt.Println(err)
 	} else {
