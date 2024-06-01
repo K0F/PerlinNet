@@ -8,19 +8,25 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/beevik/ntp"
 	"github.com/crgimenes/go-osc"
 )
 
 func main() {
 	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
 	fps := flag.Int("f", 60, "Frames per second to send osc messages (def. 60)")
+	verbose := flag.Bool("v", false, "Print out values")
 
 	flag.Parse()
 
-	start := time.Now()
-
+	response, err := ntp.Query("0.beevik-ntp.pool.ntp.org")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("time offset from server %v\n", response.ClockOffset)
+	}
 	// Set the seed for random number generation
-	rand.New(rand.NewSource(int64(start.Year())))
+	rand.New(rand.NewSource(int64(time.Now().Year())))
 	//rand.Seed(int64(start.Year()))
 
 	client := osc.NewClient("127.0.0.1", *port)
@@ -28,11 +34,15 @@ func main() {
 	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", *port, time.Now().Unix())
 
 	for {
-		t := (float64(time.Now().UnixNano())) / 1000000000.0
-		// elapsed := t.Sub(start).Seconds()
-		val := generatePerlinNoise(int64(start.Year()), t)
 
-		fmt.Printf("time: %f, value: %f\n", t, val)
+		offset := time.Now().Add(response.ClockOffset)
+		t := float64(offset.UnixNano()) / 1000000000.0
+		// elapsed := t.Sub(start).Seconds()
+		val := generatePerlinNoise(int64(offset.Year()), t)
+
+		if *verbose == true {
+			fmt.Printf("offset: %v, time: %f, value: %f\n", response.ClockOffset, t, val)
+		}
 
 		go func(val float64) {
 			msg := osc.NewMessage("/osc/perlin")
