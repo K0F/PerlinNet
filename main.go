@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/aquilax/go-perlin"
 	"github.com/beevik/ntp"
 	"github.com/crgimenes/go-osc"
 )
@@ -19,6 +20,10 @@ func main() {
 
 	flag.Parse()
 
+	client := osc.NewClient("127.0.0.1", *port)
+
+	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", *port, time.Now().Unix())
+
 	response, err := ntp.Query("0.cz.pool.ntp.org")
 	if err != nil {
 		fmt.Println(err)
@@ -26,19 +31,18 @@ func main() {
 		fmt.Printf("time offset from server %v\n", response.ClockOffset)
 	}
 	// Set the seed for random number generation
-	rand.New(rand.NewSource(int64(time.Now().Year())))
-	rand.Seed(int64(time.Now().Year()))
+	//rand.New(rand.NewSource(int64(time.Now().Year())))
+	//rand.Seed(int64(time.Now().Year()))
 
-	client := osc.NewClient("127.0.0.1", *port)
-
-	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", *port, time.Now().Unix())
+	p := perlin.NewPerlinRandSource(2, 1.5, 3, rand.NewSource(int64(time.Now().Year())))
 
 	for {
 
 		offset := time.Now().Add(response.ClockOffset)
 		t := float64(offset.UnixNano()) / 1000000000.0
 		// elapsed := t.Sub(start).Seconds()
-		val := generatePerlinNoise(int64(offset.Year()), t)
+		//val := generatePerlinNoise(int64(offset.Year()), t)
+		val := p.Noise1D(t / 10)
 
 		if *verbose == true {
 			fmt.Printf("offset: %v, time: %f, value: %f\n", response.ClockOffset, t, val)
@@ -56,6 +60,7 @@ func main() {
 
 }
 
+/*
 func generatePerlinNoise(seed int64, input float64) float64 {
 	// Set the number of octaves and persistence for Perlin noise
 	octaves := 4
@@ -95,3 +100,4 @@ func randomGradient(seed int64, x int) float64 {
 	// Generate a random float between -1 and 1
 	return -1.0 + 2.0*rand.Float64()
 }
+*/
