@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"math"
+	//"math"
 	"math/rand"
 
 	"github.com/aquilax/go-perlin"
