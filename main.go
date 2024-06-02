@@ -42,7 +42,7 @@ func main() {
 		t := float64(offset.UnixNano()) / 1000000000.0
 		// elapsed := t.Sub(start).Seconds()
 		//val := generatePerlinNoise(int64(offset.Year()), t)
-		val := p.Noise1D(t / 10)
+		val := p.Noise1D(t/10) + 0.5
 
 		if *verbose == true {
 			fmt.Printf("offset: %v, time: %f, value: %f\n", response.ClockOffset, t, val)
