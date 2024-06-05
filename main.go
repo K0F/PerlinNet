@@ -34,7 +34,7 @@ func main() {
 	//rand.New(rand.NewSource(int64(time.Now().Year())))
 	//rand.Seed(int64(time.Now().Year()))
 
-	p := perlin.NewPerlinRandSource(2, 2, 3, rand.NewSource(int64(time.Now().Year())))
+	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
 	for {
 
