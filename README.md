@@ -1,98 +1,34 @@
-# PerlinNet
+# ClockSync
 
-_Perlin Noise Generator from Unix Time_
-
-This Go program demonstrates generating Perlin noise based on Unix time. Perlin noise is a type of coherent noise that can be used for various applications, such as procedural terrain generation, procedural texture synthesis, networked live perfomances, and more!
-
-This program uses OSC protocol to distribute value to localhost. Network distribution in next release.
-
-You can run it on multiple places at once and as far as you have same time on machines it will produce very similar series live.
+This program measures a time offset from desired NTP authority and syncs a beat to it. It aligns with a daychange (still unperfect). But it gives you continuos and somewaht precise time signal to you local network via OSC, which can be of cource used many desired ways.
 
 
-## Prerequisites
 
-- Go programming language (version 1.2.0 or higher)
 
-## Installation
+## Compilation
 
-1. Clone the repository:
-   ```shell
-   https://github.com/K0F/PerlinNet.git
+```shell
+   git clone https://github.com/K0F/PerlinNet.git
    cd PerlinNet
-   ```
-
-## Compile
-
-1. Run the program:
-   ```shell
    go mod tidy
-   go build
+   go build && ./PerlinNet
    ```
 
-## Usage
-
-1. Run the program:
-   ```shell
-   ./PerlinNet -p 10000 -f 60
-
-   ```
-
-2. The program will generate Perlin noise based on the current Unix time and display the output and send value to localhost OSC address. 
-    - `-p` port on localhost to send data
-    - `-f` FPS, how many messages per second there will be
-
-## Example Output
+## Output
 
 [![asciicast](https://asciinema.org/a/594838.svg)](https://asciinema.org/a/594838)
 
 ```
-time: 1685983141.799818, value: -0.291815
-time: 1685983141.816417, value: -0.283964
-time: 1685983141.833111, value: -0.276068
-time: 1685983141.849844, value: -0.268154
-time: 1685983141.866638, value: -0.260210
-time: 1685983141.883528, value: -0.269776
-time: 1685983141.900366, value: -0.296473
-time: 1685983141.917051, value: -0.322927
-time: 1685983141.933709, value: -0.349338
+1367 0009 00013679 T 25h28m6.001s offset: -421.783µs, time: 1717630086.000524, val: 0.7686672351224568
+1368 0000 00013680 T 25h28m7.001s offset: -421.783µs, time: 1717630087.001209, val: 0.6224531870009407
+1368 0001 00013681 T 25h28m8.001s offset: -421.783µs, time: 1717630088.000675, val: 0.5120574887675482
+1368 0002 00013682 T 25h28m9.001s offset: -421.783µs, time: 1717630089.000954, val: 0.3785339483263326
+1368 0003 00013683 T 25h28m10.001s offset: -421.783µs, time: 1717630090.001417, val: 0.5004254910862553
+1368 0004 00013684 T 25h28m11.001s offset: -421.783µs, time: 1717630091.001151, val: 0.7656706389200818
+1368 0005 00013685 T 25h28m12.001s offset: -421.783µs, time: 1717630092.001201, val: 0.6728788622556626
 ```
 
-## Example SuperCollider reader
 
-```supercollider
-s.boot
-
-p = ProxySpace.push(s)
-
-(
-    ~data.kr(1);
-    ~data.mold(1);
-    ~data={|x|[x].lag(1/60)};
-OSCdef('/osc/perlin',{arg ... args;
-	 //args.postln;
-	 ~data.set(\x,args[0][2]);
-},'/osc/perlin',recvPort:10000);
-
-
-)
-
-// one synth ///////////////////////////////////////
-
-(
-~one.ar(2);
-~one.clock = p.clock;
-~one.quant=2;
-~one.fadeTime=4;
-~one={
-  var sig = WhiteNoise.ar(1!2);
-  sig = BPF.ar(sig,~data+2*1500,0.1) * ~data;
-  Splay.ar(sig,0.5,0.5);
-};
-~one.play;
-);
-~one.stop(4);
-~one.clear;
-```
 
 ## License
 
