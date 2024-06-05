@@ -1,6 +1,6 @@
 # ClockSync
 
-This program measures a time offset from desired NTP authority and syncs a beat to it. It aligns with a daychange (still unperfect). But it gives you continuos and somewaht precise time signal to you local network via OSC, which can be ofc used many desired ways.
+This program measures a time offset from desired NTP authority and syncs a beat to it. It aligns with a daychange (still unperfect). But it gives you continuos and somewhat precise time signal to you local network via OSC, which can be ofc used many desired ways.
 
 
 
