@@ -14,6 +14,18 @@ This program measures a time offset from desired NTP authority and syncs a beat 
    go build && ./PerlinNet
    ```
 
+## Usage
+
+```shell
+Usage of ./PerlinNet:
+  -b float
+    	beats per minute (default 120)
+  -m int
+    	beats per bar (default 4)
+  -p int
+    	Port to send OSC messages (def. 10000) (default 10000)
+```
+
 ## Output
 
 [![asciicast](https://asciinema.org/a/594838.svg)](https://asciinema.org/a/594838)
