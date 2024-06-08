@@ -45,7 +45,8 @@ func main() {
 
 	start := time.Now().Add(ntpTime.ClockOffset)
 	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	beatNo, barNo, totalNo := 0, 0, 0
+	offset := time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+	beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
 
 	dur := time.Duration(60000 / *bpm) * time.Millisecond
 	var drift time.Duration
@@ -95,4 +96,12 @@ func main() {
 		//time.Sleep(time.Duration(1000 / *fps) * time.Millisecond)
 	}
 
+}
+
+func calculateBeats(elapsed time.Duration, bpm float64, beatsPerBar int) (int, int, int) {
+	totalMinutes := elapsed.Minutes()
+	totalBeats := int(totalMinutes * bpm)
+	barNo := totalBeats / beatsPerBar
+	beatNo := totalBeats % beatsPerBar
+	return beatNo, barNo, totalBeats
 }
