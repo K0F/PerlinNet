@@ -43,7 +43,7 @@ func main() {
 
 	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
-	start := time.Now().Add(ntpTime.ClockOffset)
+	start := time.Now().UTC().Add(ntpTime.ClockOffset)
 	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
 	offset := time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
 	beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
@@ -71,11 +71,11 @@ func main() {
 
 		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
 			msg := osc.NewMessage("/osc/timer")
-			msg.Append(float64(t))
+			msg.Append(float32(t))
 			msg.Append(int32(beatNo))
 			msg.Append(int32(totalNo))
-			msg.Append(float64(bpm))
-			msg.Append(float64(val))
+			msg.Append(float32(bpm))
+			msg.Append(float32(val))
 			client.Send(msg)
 			//client2.Send(msg)
 
