@@ -1,6 +1,9 @@
 # ClockSync
 
-This program measures a time offset from desired NTP authority and syncs a beat to it. It aligns with a daychange (still unperfect). But it gives you continuos and somewhat precise time signal to you local network via OSC, which can be ofc used many desired ways.
+This program measures a time offset from desired NTP authority and syncs a beat to it.
+It aligns with GMT daychange (midnight) to get the same time globally.
+It gives you continuos and somewhat precise time signal to you local network via OSC,
+which can be ofc used many desired ways.
 
 
 
@@ -25,6 +28,19 @@ Usage of ./PerlinNet:
   -p int
     	Port to send OSC messages (def. 10000) (default 10000)
 ```
+
+
+## OSC message
+
+It follows a pattern `/osc/timer fiiff 1717961344.000000 1 140201 120.000000 0.473502`
+
+ - `/osc/timer`, message address
+ - `fiiff`, datatype pattern
+ - `1`, no. of beat (1..4) by default
+ - `140201`, no. of bars (from midnight GMT), any desired BPM is recalculated
+ - `120.00`, current bpm
+ - `0.473502`, synchronized perlin noise value, to use for any purpose
+
 
 ## Output
 
