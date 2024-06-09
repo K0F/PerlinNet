@@ -30,7 +30,7 @@ Usage of ./PerlinNet:
 ```
 
 
-## OSC message
+## OSC message (default @port 10000)
 
 It follows a pattern `/osc/timer fiiff 1717961344.000000 1 140201 120.000000 0.473502`
 
@@ -43,8 +43,7 @@ It follows a pattern `/osc/timer fiiff 1717961344.000000 1 140201 120.000000 0.4
 
 
 ## Output
-
-[![asciicast](https://asciinema.org/a/594838.svg)](https://asciinema.org/a/594838)
+[![asciicast](https://asciinema.org/a/663299.svg)](https://asciinema.org/a/663299)
 
 ```
 0000 0000 00000000 T 1h30m28.977s offset: -383.364µs, time: 1717630228.976975, val: 0.5667562122176195
