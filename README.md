@@ -1,4 +1,4 @@
-# ClockSync
+# PerliNet
 
 This program measures a time offset from desired NTP authority and syncs a beat to it.
 It aligns with GMT daychange (midnight) to get the same time globally.
@@ -41,6 +41,10 @@ It follows a pattern `/osc/timer fiiff 1717961344.000000 1 140201 120.000000 0.4
  - `120.00`, current bpm
  - `0.473502`, synchronized perlin noise value, to use for any purpose
 
+
+## Fine tuning
+
+To keep your clock in good shape consider using `chrony` or older `ntp` client. After some time of using it you will see that your system clock are nearly in perfect sync with NTP authority. Further precision using PTP protocol usually requires additional hardware. Some newer network cards or recent RaspberryPIs have it on board. That are further steps towards near perfect precision.
 
 ## Output
 [![asciicast](https://asciinema.org/a/663299.svg)](https://asciinema.org/a/663299)
