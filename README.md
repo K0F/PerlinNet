@@ -6,7 +6,7 @@ It gives you continuos and somewhat precise time signal to you local network via
 which can be ofc used many desired ways.
 
 
-
+![Go](https://github.com/k0f/PerlinNet/actions/workflows/go.yml/badge.svg)
 
 ## Compilation
 
