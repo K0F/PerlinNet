@@ -11,7 +11,11 @@ OUTPUT = PerliNet
 # Výchozí cíle
 .PHONY: clean all zip
 
-all: raspberrypi linux windows macos
+all:
+	go mod tidy
+	go build
+
+cross: raspberrypi linux windows macos
 
 
 linux:
@@ -26,7 +30,7 @@ macos:
 	GOOS=darwin GOARCH=amd64 go build -o $(OUTPUT)-macos main.go
 
 raspberrypi:
-	GOOS=linux GOARCH=arm GOARM=7 go build -o $(OUTPUT)-raspberrypi main.go
+	GOOS=linux GOARCH=arm GOARM=6 go build -o $(OUTPUT)-armv6l main.go
 
 #android-armv7:
 #	GOOS=android GOARCH=arm GOARM=7 CGO_ENABLED=1 CC=$(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang go build -o $(OUTPUT)-armv7 main.go
@@ -35,4 +39,4 @@ raspberrypi:
 #	GOOS=android GOARCH=arm64 CGO_ENABLED=1 CC=$(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang go build -o $(OUTPUT)-arm64 main.go
 
 clean:
-	rm -f $(OUTPUT)-linux $(OUTPUT)-windows.zip $(OUTPUT)-raspberrypi $(OUTPUT)-macos #$(OUTPUT)-armv7 $(OUTPUT)-arm64
+	rm -f $(OUTPUT)-linux $(OUTPUT)-windows.zip $(OUTPUT)-armv6l $(OUTPUT)-macos #$(OUTPUT)-armv7 $(OUTPUT)-arm64
