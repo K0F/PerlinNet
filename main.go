@@ -57,6 +57,14 @@ func main() {
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 
+		if elapsed > 24*time.Hour {
+			start = time.Now().UTC().Add(ntpTime.ClockOffset)
+			midnight = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+			offset = time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+			beatNo, barNo, totalNo = calculateBeats(offset.Sub(midnight), *bpm, *mod)
+			//fmt.Printf("resetting counters %v %v %v",beatNo, barNo, totalNo)
+		}
+
 		// time.Sleep() is slightly drifting over time, correction needed here
 		drift = time.Duration(elapsed.Milliseconds()%dur.Milliseconds()) * time.Millisecond
 
