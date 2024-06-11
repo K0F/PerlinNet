@@ -32,6 +32,8 @@ Usage of ./PerlinNet:
 
 ## OSC message (default @port 10000)
 
+By default PerliNet detects local broadcast address and sends OSC messages to it.
+
 It follows a pattern `/osc/timer diiiff 1717961344.000000 16913 1 140201 120.000000 0.473502`
 
  - `/osc/timer`, message address
