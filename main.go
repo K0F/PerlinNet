@@ -55,7 +55,7 @@ func main() {
 				}
 
 				fmt.Printf("Interface: %s, IP: %s, Maska: %s, Broadcast: %s\n", iface.Name, ip, mask, broadcast)
-				broadcastAddr = fmt.Sprintf("%s:%s", ip, strconv.Itoa(*port))
+				broadcastAddr = fmt.Sprintf("%s:%s", broadcast, strconv.Itoa(*port))
 			}
 		}
 	}
