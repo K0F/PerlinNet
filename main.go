@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
+	"strconv"
 	"time"
 
 	//"math"
@@ -27,7 +29,38 @@ func main() {
 
 	flag.Parse()
 
-	client := osc.NewClient("127.0.0.1", *port)
+	// Local broadcast adress (this will be changed if detected correctly)
+	broadcastAddr := "192.168.0.255" + strconv.Itoa(*port)
+
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		fmt.Println("Chyba při získávání síťových rozhraní:", err)
+		return
+	}
+
+	for _, iface := range interfaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			fmt.Println("Chyba při získávání adres pro rozhraní", iface.Name, ":", err)
+			continue
+		}
+
+		for _, addr := range addrs {
+			if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
+				ip := ipNet.IP.To4()
+				mask := ipNet.Mask
+				broadcast := make(net.IP, len(ip))
+				for i := range ip {
+					broadcast[i] = ip[i] | ^mask[i]
+				}
+
+				fmt.Printf("Interface: %s, IP: %s, Maska: %s, Broadcast: %s\n", iface.Name, ip, mask, broadcast)
+				broadcastAddr = fmt.Sprintf("%s:%s", ip, strconv.Itoa(*port))
+			}
+		}
+	}
+
+	client := osc.NewClient(broadcastAddr, *port)
 
 	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", *port, time.Now().Unix())
 
@@ -79,12 +112,19 @@ func main() {
 
 		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
 			msg := osc.NewMessage("/osc/timer")
-			msg.Append(float32(t))
+			msg.Append(t)
+			msg.Append(int32(barNo))
 			msg.Append(int32(beatNo))
 			msg.Append(int32(totalNo))
 			msg.Append(float32(bpm))
 			msg.Append(float32(val))
-			client.Send(msg)
+
+			// Odeslání OSC zprávy na broadcast adresu
+			err = sendToBroadcast(client, broadcastAddr, msg)
+			if err != nil {
+				fmt.Println("There was an error sending OSC message:", err)
+			}
+			//client.Send(msg)
 			//client2.Send(msg)
 
 		}(beatNo, totalNo, *bpm, t, val)
@@ -104,6 +144,29 @@ func main() {
 		//time.Sleep(time.Duration(1000 / *fps) * time.Millisecond)
 	}
 
+}
+
+// sendToBroadcast odesílá OSC zprávu na danou broadcast adresu
+func sendToBroadcast(client *osc.Client, address string, msg *osc.Message) error {
+	conn, err := net.Dial("udp", address)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	udpConn := conn.(*net.UDPConn)
+	err = udpConn.SetWriteDeadline(time.Now().Add(2 * time.Second))
+	if err != nil {
+		return err
+	}
+
+	data, err := msg.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	_, err = udpConn.Write(data)
+	return err
 }
 
 func calculateBeats(elapsed time.Duration, bpm float64, beatsPerBar int) (int, int, int) {
