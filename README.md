@@ -36,7 +36,7 @@ It follows a pattern `/osc/timer diiiff 1717961344.000000 16913 1 140201 120.000
 
  - `/osc/timer`, message address
  - `diiiff`, datatype pattern
- - `16913`, no. of bars (modulo barlength -m 4 flag)
+ - `16913`, no. of bars
  - `1`, no. of beat (1..4) by default
  - `140201`, no. of beats (from midnight GMT), any desired BPM is recalculated
  - `120.00`, current bpm
