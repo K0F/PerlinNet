@@ -32,12 +32,13 @@ Usage of ./PerlinNet:
 
 ## OSC message (default @port 10000)
 
-It follows a pattern `/osc/timer fiiff 1717961344.000000 1 140201 120.000000 0.473502`
+It follows a pattern `/osc/timer diiiff 1717961344.000000 16913 1 140201 120.000000 0.473502`
 
  - `/osc/timer`, message address
- - `fiiff`, datatype pattern
+ - `diiiff`, datatype pattern
+ - `16913`, no. of bars (modulo barlength -m 4 flag)
  - `1`, no. of beat (1..4) by default
- - `140201`, no. of bars (from midnight GMT), any desired BPM is recalculated
+ - `140201`, no. of beats (from midnight GMT), any desired BPM is recalculated
  - `120.00`, current bpm
  - `0.473502`, synchronized perlin noise value, to use for any purpose
 
