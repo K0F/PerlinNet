@@ -47,7 +47,9 @@ It follows a pattern `/osc/timer diiiff 1717961344.000000 16913 1 140201 120.000
 
 ## Fine tuning
 
-To keep your clock in good shape consider using `chrony` or older `ntp` client. After some time of using it you will see that your system clock are nearly in perfect sync with NTP authority. Further precision using PTP protocol usually requires additional hardware. Some newer network cards or recent RaspberryPIs have it on board. That are further steps towards near perfect precision.
+To keep your clock in good shape consider using `chrony` or older `ntp` client. After some time of using it you will see that your system clock are nearly in perfect sync with NTP authority. 
+
+Further precision using PTP protocol is out of scope of this software it usually requires additional hardware. Some newer network cards or recent RaspberryPIs have it on board. That are steps towards locally syncronized precision.
 
 ## Output
 [![asciicast](https://asciinema.org/a/663299.svg)](https://asciinema.org/a/663299)
