@@ -12,6 +12,8 @@ OUTPUT = PerliNet
 .PHONY: clean all zip
 
 all:
+	cd beep; make
+	cd ..
 	go mod tidy
 	go build
 
