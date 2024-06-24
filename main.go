@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"os/exec"
+
 	//"math"
 	"math/rand"
 
@@ -19,13 +21,25 @@ import (
 
 var ntpTime time.Time
 
+func runBeep(arg string) {
+	cmd := exec.Command("./beep/beep", arg)
+	err := cmd.Run()
+	if err != nil {
+		fmt.Printf("Error running beep: %v\n", err)
+	}
+
+	//else {
+	//	fmt.Println("Beep executed successfully")
+	//}
+}
+
 func main() {
 	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
 	//fps := flag.Int("f", 60, "Frames per second to send osc messages (def. 60)")
-	//verbose := flag.Bool("v", false, "Print out values")
+	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
 
-	mod := flag.Int("m", 4, "beats per bar")
-	bpm := flag.Float64("b", 120.0, "beats per minute")
+	mod := flag.Int("m", 20, "beats per bar")
+	bpm := flag.Float64("b", 60.0, "beats per minute")
 
 	flag.Parse()
 
@@ -105,6 +119,9 @@ func main() {
 
 		if beatNo == 0 {
 			color.Green("%04d %04d %08d T %v offset: %v, time: %f, val: %v\n", barNo, beatNo, totalNo, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, t, val)
+			if *sound {
+				go runBeep("beep/sound.wav")
+			}
 		} else {
 			fmt.Printf("%04d %04d %08d T %v offset: %v, time: %f, val: %v\n", barNo, beatNo, totalNo, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, t, val)
 			//fmt.Printf("%04d %04d %08d T %v\n", barNo, beatNo, totalNo, elapsed.Round(time.Duration(1*time.Millisecond)))
