@@ -76,7 +76,7 @@ func main() {
 	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
 	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
 
-	mod := flag.Int("m", 20, "beats per bar")
+	mod := flag.Int("m", 8, "beats per bar")
 	bpm := flag.Float64("b", 60.0, "beats per minute")
 
 	flag.Parse()
