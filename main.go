@@ -20,6 +20,8 @@ import (
 )
 
 var ntpTime time.Time
+var client osc.Client
+var broadcastAddr string
 
 func runBeep(arg string) {
 	cmd := exec.Command("./beep/beep", arg)
@@ -27,24 +29,12 @@ func runBeep(arg string) {
 	if err != nil {
 		fmt.Printf("Error running beep: %v\n", err)
 	}
-
-	//else {
-	//	fmt.Println("Beep executed successfully")
-	//}
 }
 
-func main() {
-	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
-	//fps := flag.Int("f", 60, "Frames per second to send osc messages (def. 60)")
-	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
-
-	mod := flag.Int("m", 20, "beats per bar")
-	bpm := flag.Float64("b", 60.0, "beats per minute")
-
-	flag.Parse()
+func startServer(port int) osc.Client {
 
 	// Local broadcast adress (this will be changed if detected correctly)
-	broadcastAddr := "192.168.0.255" + strconv.Itoa(*port)
+	broadcastAddr = "192.168.0.255" + strconv.Itoa(port)
 
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -69,14 +59,29 @@ func main() {
 				}
 
 				fmt.Printf("Interface: %s, IP: %s, Maska: %s, Broadcast: %s\n", iface.Name, ip, mask, broadcast)
-				broadcastAddr = fmt.Sprintf("%s:%s", broadcast, strconv.Itoa(*port))
+				broadcastAddr = fmt.Sprintf("%s:%s", broadcast, strconv.Itoa(port))
 			}
 		}
 	}
 
-	client := osc.NewClient(broadcastAddr, *port)
+	client := osc.NewClient(broadcastAddr, port)
 
-	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", *port, time.Now().Unix())
+	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", port, time.Now().Unix())
+
+	return client
+}
+
+func main() {
+	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
+	//fps := flag.Int("f", 60, "Frames per second to send osc messages (def. 60)")
+	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
+
+	mod := flag.Int("m", 20, "beats per bar")
+	bpm := flag.Float64("b", 60.0, "beats per minute")
+
+	flag.Parse()
+
+	startServer(*port)
 
 	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
 	if err != nil {
@@ -137,7 +142,7 @@ func main() {
 			msg.Append(float32(val))
 
 			// Odeslání OSC zprávy na broadcast adresu
-			err = sendToBroadcast(client, broadcastAddr, msg)
+			err = sendToBroadcast(&client, broadcastAddr, msg)
 			if err != nil {
 				fmt.Println("There was an error sending OSC message:", err)
 			}
