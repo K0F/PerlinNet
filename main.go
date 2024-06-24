@@ -31,21 +31,21 @@ func runBeep(arg string) {
 	}
 }
 
-func startServer(port int) osc.Client {
+func startServer(port int) {
 
 	// Local broadcast adress (this will be changed if detected correctly)
 	broadcastAddr = "192.168.0.255" + strconv.Itoa(port)
 
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		fmt.Println("Chyba při získávání síťových rozhraní:", err)
+		fmt.Println("Error getting network adapter:", err)
 		return
 	}
 
 	for _, iface := range interfaces {
 		addrs, err := iface.Addrs()
 		if err != nil {
-			fmt.Println("Chyba při získávání adres pro rozhraní", iface.Name, ":", err)
+			fmt.Println("Error getting interface address", iface.Name, ":", err)
 			continue
 		}
 
@@ -64,16 +64,16 @@ func startServer(port int) osc.Client {
 		}
 	}
 
+	// this will not work
 	client := osc.NewClient(broadcastAddr, port)
+	fmt.Println("%T", client)
 
 	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", port, time.Now().Unix())
 
-	return client
 }
 
 func main() {
 	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
-	//fps := flag.Int("f", 60, "Frames per second to send osc messages (def. 60)")
 	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
 
 	mod := flag.Int("m", 20, "beats per bar")
@@ -89,6 +89,7 @@ func main() {
 	} else {
 		fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
 	}
+
 	// Set the seed for random number generation
 	//rand.New(rand.NewSource(int64(time.Now().Year())))
 	//rand.Seed(int64(time.Now().Year()))
