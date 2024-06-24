@@ -66,7 +66,9 @@ func startServer(port int) {
 
 	// this will not work
 	client := osc.NewClient(broadcastAddr, port)
-	fmt.Println("%T", client)
+	if client == nil {
+		// ... this will happen, but actually works
+	}
 
 	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", port, time.Now().Unix())
 
@@ -106,7 +108,7 @@ func main() {
 
 	for {
 
-		offset := time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+		offset := time.Now().UTC().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 
