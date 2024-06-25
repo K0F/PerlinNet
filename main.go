@@ -124,7 +124,16 @@ func main() {
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 
-		if elapsed > 24*time.Hour {
+		if elapsed > 1*time.Hour {
+
+			// sync to ntp server
+			ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
+			}
+
 			start = time.Now().UTC().Add(ntpTime.ClockOffset)
 			midnight = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
 			offset = time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
