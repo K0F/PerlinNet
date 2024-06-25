@@ -124,10 +124,10 @@ func main() {
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 
-		if elapsed > 1*time.Hour {
+		if elapsed > 24*time.Hour {
 
 			// sync to ntp server
-			ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
+			ntpTime, err = ntp.Query("0.cz.pool.ntp.org")
 			if err != nil {
 				fmt.Println(err)
 			} else {
