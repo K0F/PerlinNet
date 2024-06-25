@@ -15,6 +15,7 @@ all:
 	cd beep; make
 	cd ..
 	go mod tidy
+	go test
 	go build
 
 cross: raspberrypi linux windows macos
@@ -23,9 +24,14 @@ cross: raspberrypi linux windows macos
 linux:
 	GOOS=linux GOARCH=amd64 go build -o $(OUTPUT)-linux main.go
 
-windows:
+windows64:
 	GOOS=windows GOARCH=amd64 go build -o $(OUTPUT).exe main.go
-	zip $(OUTPUT)-windows.zip $(OUTPUT).exe
+	zip $(OUTPUT)-windows64.zip $(OUTPUT).exe
+	rm $(OUTPUT).exe
+
+windows32:
+	GOOS=windows GOARCH=386 go build -o $(OUTPUT).exe main.go
+	zip $(OUTPUT)-windows32.zip $(OUTPUT).exe
 	rm $(OUTPUT).exe
 
 macos:
@@ -41,4 +47,4 @@ raspberrypi:
 #	GOOS=android GOARCH=arm64 CGO_ENABLED=1 CC=$(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang go build -o $(OUTPUT)-arm64 main.go
 
 clean:
-	rm -f $(OUTPUT)-linux $(OUTPUT)-windows.zip $(OUTPUT)-armv6l $(OUTPUT)-macos #$(OUTPUT)-armv7 $(OUTPUT)-arm64
+	rm -f $(OUTPUT)-linux $(OUTPUT)-windows64.zip $(OUTPUT)-windows32.zip $(OUTPUT)-armv6l $(OUTPUT)-macos #$(OUTPUT)-armv7 $(OUTPUT)-arm64

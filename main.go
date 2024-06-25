@@ -138,12 +138,12 @@ func main() {
 		val := p.Noise1D(t/10) + 0.5
 
 		if beatNo == 0 {
-			color.Green("T:%f UTC:%v OFFSET:%v BAR:%04d BEAT:%04d TOTAL:%08d VAL:%v\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
+			color.Green("T:%f UTC:%v OFFSET:%v VAL:%v BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
 			if *sound {
 				go runBeep("beep/sound.wav")
 			}
 		} else {
-			fmt.Printf("T:%f UTC:%v OFFSET:%v BAR:%04d BEAT:%04d TOTAL:%08d VAL:%v\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
+			fmt.Printf("T:%f UTC:%v OFFSET:%v VAL:%v BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
 		}
 
 		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
