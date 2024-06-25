@@ -74,16 +74,7 @@ func startServer(port int) {
 
 }
 
-func main() {
-	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
-	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
-
-	mod := flag.Int("m", 8, "beats per bar")
-	bpm := flag.Float64("b", 60.0, "beats per minute")
-
-	flag.Parse()
-
-	startServer(*port)
+func getOffset() time.Duration {
 
 	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
 	if err != nil {
@@ -92,22 +83,44 @@ func main() {
 		fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
 	}
 
+	return ntpTime.ClockOffset
+
+}
+
+func main() {
+	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
+	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
+
+	mod := flag.Int("m", 4, "beats per bar")
+	bpm := flag.Float64("b", 120.0, "beats per minute")
+
+	flag.Parse()
+
+	go startServer(*port)
+
+	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
+	}
+
+	start := time.Now().UTC().Add(ntpTime.ClockOffset)
+	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
+	offset := time.Now().UTC().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+	beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
+
 	// Set the seed for random number generation
 	//rand.New(rand.NewSource(int64(time.Now().Year())))
 	//rand.Seed(int64(time.Now().Year()))
 
 	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
-	start := time.Now().UTC().Add(ntpTime.ClockOffset)
-	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	offset := time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
-	beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
-
 	dur := time.Duration(60000 / *bpm) * time.Millisecond
 	var drift time.Duration
+	var c int = 0
 
 	for {
-
 		offset := time.Now().UTC().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
@@ -160,7 +173,17 @@ func main() {
 		if beatNo >= *mod {
 			beatNo = 0
 			barNo = barNo + 1
+			c++
 		}
+
+		/*
+			if c%10 == 0 {
+				go func(_offset time.Time) {
+					_offset = _offset.Add(getOffset())
+					time.Sleep(1)
+				}(offset)
+			}
+		*/
 
 		// calculate drift correction
 		ms := time.Duration(dur.Milliseconds()-drift.Milliseconds()) * time.Millisecond
