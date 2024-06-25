@@ -64,10 +64,9 @@ func startServer(port int) {
 		}
 	}
 
-	// this will not work
 	client := osc.NewClient(broadcastAddr, port)
 	if client == nil {
-		// ... this will happen, but actually works
+		// ... this will happen, and/but actually works
 	}
 
 	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", port, time.Now().Unix())
@@ -139,13 +138,12 @@ func main() {
 		val := p.Noise1D(t/10) + 0.5
 
 		if beatNo == 0 {
-			color.Green("%04d %04d %08d T %v offset: %v, time: %f, val: %v\n", barNo, beatNo, totalNo, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, t, val)
+			color.Green("T:%f UTC:%v OFFSET:%v BAR:%04d BEAT:%04d TOTAL:%08d VAL:%v\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
 			if *sound {
 				go runBeep("beep/sound.wav")
 			}
 		} else {
-			fmt.Printf("%04d %04d %08d T %v offset: %v, time: %f, val: %v\n", barNo, beatNo, totalNo, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, t, val)
-			//fmt.Printf("%04d %04d %08d T %v\n", barNo, beatNo, totalNo, elapsed.Round(time.Duration(1*time.Millisecond)))
+			fmt.Printf("T:%f UTC:%v OFFSET:%v BAR:%04d BEAT:%04d TOTAL:%08d VAL:%v\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
 		}
 
 		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
@@ -162,8 +160,6 @@ func main() {
 			if err != nil {
 				fmt.Println("There was an error sending OSC message:", err)
 			}
-			//client.Send(msg)
-			//client2.Send(msg)
 
 		}(beatNo, totalNo, *bpm, t, val)
 
@@ -194,7 +190,6 @@ func main() {
 
 }
 
-// sendToBroadcast odesílá OSC zprávu na danou broadcast adresu
 func sendToBroadcast(client *osc.Client, address string, msg *osc.Message) error {
 	conn, err := net.Dial("udp", address)
 	if err != nil {
