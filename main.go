@@ -152,19 +152,7 @@ func main() {
 			//fmt.Printf("resetting counters %v %v %v",beatNo, barNo, totalNo)
 		}
 
-		// time.Sleep() is slightly drifting over time, correction needed here
-		drift = time.Duration(elapsed.Milliseconds()%dur.Milliseconds()) * time.Millisecond
-
 		val := p.Noise1D(t/10) + 0.5
-
-		if beatNo == 0 {
-			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
-			if *sound {
-				go runBeep("beep/sound.wav")
-			}
-		} else {
-			fmt.Printf("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
-		}
 
 		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
 			msg := osc.NewMessage("/osc/timer")
@@ -200,6 +188,18 @@ func main() {
 				}(offset)
 			}
 		*/
+
+		// time.Sleep() is slightly drifting over time, correction needed here
+		drift = time.Duration(elapsed.Milliseconds()%dur.Milliseconds()) * time.Millisecond
+
+		if beatNo == 0 {
+			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
+			if *sound {
+				go runBeep("beep/sound.wav")
+			}
+		} else {
+			fmt.Printf("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
+		}
 
 		// calculate drift correction
 		ms := time.Duration(dur.Milliseconds()-drift.Milliseconds()) * time.Millisecond
