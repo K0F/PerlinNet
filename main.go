@@ -17,6 +17,7 @@ import (
 	"github.com/crgimenes/go-osc"
 
 	"github.com/fatih/color"
+	//	term "github.com/nsf/termbox-go"
 )
 
 var ntpTime time.Time
@@ -87,6 +88,16 @@ func getOffset() time.Duration {
 }
 
 func main() {
+
+	/*
+		err := term.Init()
+		if err != nil {
+			panic(err)
+		}
+
+		defer term.Close()
+	*/
+
 	port := flag.Int("p", 10000, "Port to send OSC messages (def. 10000)")
 	sound := flag.Bool("s", true, "Play a beep sound each 0nth cycle (green).")
 
@@ -119,13 +130,13 @@ func main() {
 	var drift time.Duration
 	var c int = 0
 
+	// main loop
 	for {
 		offset := time.Now().UTC().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 
 		if elapsed > 24*time.Hour {
-
 			// sync to ntp server
 			ntpTime, err = ntp.Query("0.cz.pool.ntp.org")
 			if err != nil {
@@ -147,12 +158,12 @@ func main() {
 		val := p.Noise1D(t/10) + 0.5
 
 		if beatNo == 0 {
-			color.Green("T:%f UTC:%v OFFSET:%v VAL:%v BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
+			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
 			if *sound {
 				go runBeep("beep/sound.wav")
 			}
 		} else {
-			fmt.Printf("T:%f UTC:%v OFFSET:%v VAL:%v BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset, val, barNo, beatNo, totalNo)
+			fmt.Printf("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
 		}
 
 		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
