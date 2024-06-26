@@ -117,22 +117,18 @@ func main() {
 
 	start := time.Now().UTC().Add(ntpTime.ClockOffset)
 	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	offset := time.Now().UTC().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+	offset := start
 	beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
-
-	// Set the seed for random number generation
-	//rand.New(rand.NewSource(int64(time.Now().Year())))
-	//rand.Seed(int64(time.Now().Year()))
 
 	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
-	dur := time.Duration(60000 / *bpm) * time.Millisecond
+	dur := time.Duration(60000000 / *bpm) * time.Microsecond
 	var drift time.Duration
 	var c int = 0
 
 	// main loop
 	for {
-		offset := time.Now().UTC().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+		offset := time.Now().UTC().Add(ntpTime.ClockOffset)
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 
@@ -190,7 +186,7 @@ func main() {
 		*/
 
 		// time.Sleep() is slightly drifting over time, correction needed here
-		drift = time.Duration(elapsed.Milliseconds()%dur.Milliseconds()) * time.Millisecond
+		drift = time.Duration(elapsed.Microseconds()%dur.Microseconds()) * time.Microsecond
 
 		if beatNo == 0 {
 			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
@@ -202,7 +198,8 @@ func main() {
 		}
 
 		// calculate drift correction
-		ms := time.Duration(dur.Milliseconds()-drift.Milliseconds()) * time.Millisecond
+
+		ms := time.Duration(dur.Microseconds()-drift.Microseconds()) * time.Microsecond
 		time.Sleep(ms)
 
 		//time.Sleep(time.Duration(1000 / *fps) * time.Millisecond)
