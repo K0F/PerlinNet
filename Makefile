@@ -18,7 +18,7 @@ all:
 	go test
 	go build
 
-cross: raspberrypi linux windows macos
+cross: raspberrypi linux windows64 windows32 macos
 
 
 linux:
