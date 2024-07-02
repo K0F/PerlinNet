@@ -34,7 +34,7 @@ func runBeep(arg string) {
 	}
 }
 
-func startServer(port int) {
+func startServer(port int) error {
 
 	// Local broadcast adress (this will be changed if detected correctly)
 	broadcastAddr = "192.168.0.255" + strconv.Itoa(port)
@@ -42,7 +42,7 @@ func startServer(port int) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
 		fmt.Println("Error getting network adapter:", err)
-		return
+		return err
 	}
 
 	for _, iface := range interfaces {
@@ -74,6 +74,7 @@ func startServer(port int) {
 
 	fmt.Printf("Starting OSC server @%v, Unix epoch: %v\n", port, time.Now().Unix())
 
+	return err
 }
 
 func getOffset() (int64, error) {
