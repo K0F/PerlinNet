@@ -117,8 +117,7 @@ func main() {
 
 	start := time.Now().UTC().Add(ntpTime.ClockOffset)
 	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-	offset := start
-	beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
+	//offset := start
 
 	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
@@ -131,6 +130,7 @@ func main() {
 		offset := time.Now().UTC().Add(ntpTime.ClockOffset)
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
+		beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
 
 		if elapsed > 24*time.Hour {
 			// sync to ntp server
@@ -229,7 +229,7 @@ func sendToBroadcast(client *osc.Client, address string, msg *osc.Message) error
 
 func calculateBeats(elapsed time.Duration, bpm float64, beatsPerBar int) (int, int, int) {
 	totalMinutes := elapsed.Minutes()
-	totalBeats := int(totalMinutes * bpm)
+	totalBeats := int(totalMinutes*bpm - 1)
 	barNo := totalBeats / beatsPerBar
 	beatNo := totalBeats % beatsPerBar
 	return beatNo, barNo, totalBeats
