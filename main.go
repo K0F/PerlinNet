@@ -74,16 +74,16 @@ func startServer(port int) {
 
 }
 
-func getOffset() time.Duration {
+func getOffset() int64 {
 
 	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
+		color.Red("SYNC time offset from server: %v\n", ntpTime.ClockOffset)
 	}
 
-	return ntpTime.ClockOffset
+	return int64(time.Duration(ntpTime.ClockOffset * time.Microsecond))
 
 }
 
@@ -123,7 +123,7 @@ func main() {
 	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
 	dur := time.Duration(60000000 / *bpm) * time.Microsecond
-	var drift time.Duration
+	//var drift time.Duration
 	var c int = 0
 
 	// main loop
@@ -176,17 +176,15 @@ func main() {
 			c++
 		}
 
-		/*
-			if c%10 == 0 {
-				go func(_offset time.Time) {
-					_offset = _offset.Add(getOffset())
-					time.Sleep(1)
-				}(offset)
-			}
-		*/
+		if totalNo%100 == 0 {
+			go func(_offset time.Time) {
+				_offset = time.UnixMicro(getOffset())
+				time.Sleep(1 * time.Second)
+			}(offset)
+		}
 
 		// time.Sleep() is slightly drifting over time, correction needed here
-		drift = time.Duration(elapsed.Microseconds()%dur.Microseconds()) * time.Microsecond
+		drift := time.Duration(elapsed.Microseconds()%dur.Microseconds()) * time.Microsecond
 
 		if beatNo == 0 {
 			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
