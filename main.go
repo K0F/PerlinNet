@@ -128,6 +128,7 @@ func main() {
 	dur := time.Duration(60000000 / *bpm) * time.Microsecond
 	//var drift time.Duration
 	var c int = 0
+	var ms time.Duration
 
 	// main loop
 	for {
@@ -135,6 +136,9 @@ func main() {
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 		beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
+
+		// time.Sleep() is slightly drifting over time, correction needed here
+		drift := time.Duration(elapsed.Microseconds()%dur.Microseconds()) * time.Microsecond
 
 		if elapsed > 24*time.Hour {
 			// sync to ntp server
@@ -182,9 +186,6 @@ func main() {
 			}(offset)
 		}
 
-		// time.Sleep() is slightly drifting over time, correction needed here
-		drift := time.Duration(elapsed.Microseconds()%dur.Microseconds()) * time.Microsecond
-
 		if beatNo == 0 {
 			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
 			if *sound {
@@ -196,7 +197,7 @@ func main() {
 
 		// calculate drift correction
 
-		ms := time.Duration(dur.Microseconds()-drift.Microseconds()) * time.Microsecond
+		ms = time.Duration(dur.Microseconds()-drift.Microseconds()) * time.Microsecond
 		time.Sleep(ms)
 
 		totalNo = totalNo + 1
