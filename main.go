@@ -171,15 +171,6 @@ func main() {
 
 		}(beatNo, totalNo, *bpm, t, val)
 
-		totalNo = totalNo + 1
-		beatNo = beatNo + 1
-
-		if beatNo >= *mod {
-			beatNo = 0
-			barNo = barNo + 1
-			c++
-		}
-
 		if totalNo%100 == 0 {
 			go func(_offset time.Time) {
 				off, err := getOffset()
@@ -207,6 +198,15 @@ func main() {
 
 		ms := time.Duration(dur.Microseconds()-drift.Microseconds()) * time.Microsecond
 		time.Sleep(ms)
+
+		totalNo = totalNo + 1
+		beatNo = beatNo + 1
+
+		if beatNo >= *mod {
+			beatNo = 0
+			barNo = barNo + 1
+			c++
+		}
 
 		//time.Sleep(time.Duration(1000 / *fps) * time.Millisecond)
 	}
