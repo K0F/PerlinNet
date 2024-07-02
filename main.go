@@ -9,6 +9,8 @@ import (
 
 	"os/exec"
 
+	//	"errors"
+
 	//"math"
 	"math/rand"
 
@@ -74,16 +76,17 @@ func startServer(port int) {
 
 }
 
-func getOffset() int64 {
+func getOffset() (int64, error) {
 
 	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
 	if err != nil {
 		fmt.Println(err)
+		return 0, err
 	} else {
 		color.Red("SYNC time offset from server: %v\n", ntpTime.ClockOffset)
 	}
 
-	return int64(time.Duration(ntpTime.ClockOffset * time.Microsecond))
+	return int64(time.Duration(ntpTime.ClockOffset * time.Microsecond)), nil
 
 }
 
@@ -178,8 +181,12 @@ func main() {
 
 		if totalNo%100 == 0 {
 			go func(_offset time.Time) {
-				_offset = time.UnixMicro(getOffset())
-				time.Sleep(1 * time.Second)
+				off, err := getOffset()
+				if err != nil {
+
+					_offset = time.UnixMicro(off)
+					time.Sleep(1 * time.Second)
+				}
 			}(offset)
 		}
 
@@ -229,8 +236,22 @@ func sendToBroadcast(client *osc.Client, address string, msg *osc.Message) error
 
 func calculateBeats(elapsed time.Duration, bpm float64, beatsPerBar int) (int, int, int) {
 	totalMinutes := elapsed.Minutes()
-	totalBeats := int(totalMinutes*bpm - 1)
+	totalBeats := int(totalMinutes * bpm)
 	barNo := totalBeats / beatsPerBar
 	beatNo := totalBeats % beatsPerBar
+
+	// dirty way to not get -1
+	if beatNo < 0 {
+		beatNo = 0
+	}
+
+	if totalBeats < 0 {
+		totalBeats = 0
+	}
+
+	if barNo < 0 {
+		barNo = 0
+	}
+
 	return beatNo, barNo, totalBeats
 }
