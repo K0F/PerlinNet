@@ -6,17 +6,21 @@ IS_RASPBERRY_PI := $(shell grep -q "Raspberry Pi" /proc/cpuinfo && echo true)
 
 
 # Název výstupního souboru
-OUTPUT = PerliNet
+OUTPUT = PerlinNet
 
 # Výchozí cíle
-.PHONY: clean all zip
+.PHONY: all termux beep clean zip
 
-all:
-	cd beep; make
-	cd ..
+all: beep
 	go mod tidy
 	go test
 	go build
+
+# Android via Termux: builds beep and the Go binary natively for the device
+termux: all
+
+beep:
+	$(MAKE) -C beep
 
 cross: raspberrypi linux windows64 windows32 macos
 
@@ -40,11 +44,13 @@ macos:
 raspberrypi:
 	GOOS=linux GOARCH=arm GOARM=6 go build -o $(OUTPUT)-armv6l main.go
 
-#android-armv7:
-#	GOOS=android GOARCH=arm GOARM=7 CGO_ENABLED=1 CC=$(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang go build -o $(OUTPUT)-armv7 main.go
+# Android cross-builds (no NDK needed; the Go program is pure Go).
+# On Termux itself just run `make termux` and go builds natively.
+android-armv7:
+	GOOS=android GOARCH=arm GOARM=7 CGO_ENABLED=0 go build -o $(OUTPUT)-armv7 main.go
 
-#android-arm64:
-#	GOOS=android GOARCH=arm64 CGO_ENABLED=1 CC=$(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang go build -o $(OUTPUT)-arm64 main.go
+android-arm64:
+	GOOS=android GOARCH=arm64 CGO_ENABLED=0 go build -o $(OUTPUT)-arm64 main.go
 
 clean:
-	rm -f $(OUTPUT)-linux $(OUTPUT)-windows64.zip $(OUTPUT)-windows32.zip $(OUTPUT)-armv6l $(OUTPUT)-macos #$(OUTPUT)-armv7 $(OUTPUT)-arm64
+	rm -f $(OUTPUT)-linux $(OUTPUT)-windows64.zip $(OUTPUT)-windows32.zip $(OUTPUT)-armv6l $(OUTPUT)-macos $(OUTPUT)-armv7 $(OUTPUT)-arm64

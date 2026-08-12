@@ -1,17 +1,20 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strconv"
+	"sync"
+	"syscall"
 	"time"
 
-	"os/exec"
-
-	//	"errors"
-
-	//"math"
+	//	"math"
 	"math/rand"
 
 	"github.com/aquilax/go-perlin"
@@ -22,22 +25,59 @@ import (
 	//	term "github.com/nsf/termbox-go"
 )
 
-var ntpTime time.Time
 var client osc.Client
 var broadcastAddr string
 
+var offsetMu sync.RWMutex
+var clockOffsetValue time.Duration
+
+func beepDir() string {
+	exe, err := os.Executable()
+	if err == nil {
+		return filepath.Dir(exe)
+	}
+	if cwd, err := os.Getwd(); err == nil {
+		return cwd
+	}
+	return "."
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
 func runBeep(arg string) {
-	cmd := exec.Command("./beep/beep", arg)
+	bin := filepath.Join(beepDir(), "beep", "beep")
+	if !fileExists(bin) {
+		// in-tree run (go run), binary may live in cwd
+		bin = "./beep/beep"
+	}
+
+	cmd := exec.Command(bin, arg)
 	err := cmd.Run()
 	if err != nil {
-		fmt.Printf("Error running beep: %v\n", err)
+		if errors.Is(err, syscall.ENOEXEC) {
+			fmt.Printf("Cannot run '%s': it was not built for this platform (%s/%s).\n", bin, runtime.GOOS, runtime.GOARCH)
+			fmt.Printf("Build it for this device with: make -C beep\n")
+		} else {
+			fmt.Printf("Error running beep: %v\n", err)
+		}
 	}
+}
+
+func computeBroadcast(ip net.IP, mask net.IPMask) net.IP {
+	broadcast := make(net.IP, len(ip))
+	for i := range ip {
+		broadcast[i] = ip[i] | ^mask[i]
+	}
+	return broadcast
 }
 
 func startServer(port int) error {
 
 	// Local broadcast adress (this will be changed if detected correctly)
-	broadcastAddr = "192.168.0.255" + strconv.Itoa(port)
+	broadcastAddr = "192.168.0.255:" + strconv.Itoa(port)
 
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -56,10 +96,7 @@ func startServer(port int) error {
 			if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
 				ip := ipNet.IP.To4()
 				mask := ipNet.Mask
-				broadcast := make(net.IP, len(ip))
-				for i := range ip {
-					broadcast[i] = ip[i] | ^mask[i]
-				}
+				broadcast := computeBroadcast(ip, mask)
 
 				fmt.Printf("Interface: %s, IP: %s, Maska: %s, Broadcast: %s\n", iface.Name, ip, mask, broadcast)
 				broadcastAddr = fmt.Sprintf("%s:%s", broadcast, strconv.Itoa(port))
@@ -77,6 +114,10 @@ func startServer(port int) error {
 	return err
 }
 
+func offsetMicros(offset time.Duration) int64 {
+	return int64(offset / time.Microsecond)
+}
+
 func getOffset() (int64, error) {
 
 	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
@@ -87,8 +128,20 @@ func getOffset() (int64, error) {
 		color.Red("SYNC time offset from server: %v\n", ntpTime.ClockOffset)
 	}
 
-	return int64(time.Duration(ntpTime.ClockOffset * time.Microsecond)), nil
+	return offsetMicros(ntpTime.ClockOffset), nil
 
+}
+
+func clockOffset() time.Duration {
+	offsetMu.RLock()
+	defer offsetMu.RUnlock()
+	return clockOffsetValue
+}
+
+func setClockOffset(d time.Duration) {
+	offsetMu.Lock()
+	clockOffsetValue = d
+	offsetMu.Unlock()
 }
 
 func main() {
@@ -110,6 +163,15 @@ func main() {
 
 	flag.Parse()
 
+	if *bpm <= 0 {
+		fmt.Println("BPM must be greater than 0")
+		os.Exit(1)
+	}
+	if *mod <= 0 {
+		fmt.Println("beats per bar must be greater than 0")
+		os.Exit(1)
+	}
+
 	go startServer(*port)
 
 	ntpTime, err := ntp.Query("0.cz.pool.ntp.org")
@@ -117,22 +179,26 @@ func main() {
 		fmt.Println(err)
 	} else {
 		fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
+		setClockOffset(ntpTime.ClockOffset)
 	}
 
-	start := time.Now().UTC().Add(ntpTime.ClockOffset)
+	start := time.Now().UTC().Add(clockOffset())
 	midnight := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
 	//offset := start
 
 	p := perlin.NewPerlinRandSource(1.5, 2, 3, rand.NewSource(int64(time.Now().Year())))
 
 	dur := time.Duration(60000000 / *bpm) * time.Microsecond
+	if dur < time.Microsecond {
+		dur = time.Microsecond
+	}
 	//var drift time.Duration
 	var c int = 0
 	var ms time.Duration
 
 	// main loop
 	for {
-		offset := time.Now().UTC().Add(ntpTime.ClockOffset)
+		offset := time.Now().UTC().Add(clockOffset())
 		t := float64(offset.UnixNano()) / 1000000000.0
 		elapsed := offset.Sub(midnight)
 		beatNo, barNo, totalNo := calculateBeats(offset.Sub(midnight), *bpm, *mod)
@@ -147,18 +213,19 @@ func main() {
 				fmt.Println(err)
 			} else {
 				fmt.Printf("time offset from server %v\n", ntpTime.ClockOffset)
+				setClockOffset(ntpTime.ClockOffset)
 			}
 
-			start = time.Now().UTC().Add(ntpTime.ClockOffset)
+			start = time.Now().UTC().Add(clockOffset())
 			midnight = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, start.Location())
-			offset = time.Now().Add(ntpTime.ClockOffset) //refreshOffset(totalNo)
+			offset = time.Now().Add(clockOffset()) //refreshOffset(totalNo)
 			beatNo, barNo, totalNo = calculateBeats(offset.Sub(midnight), *bpm, *mod)
 			//fmt.Printf("resetting counters %v %v %v",beatNo, barNo, totalNo)
 		}
 
 		val := p.Noise1D(t/10) + 0.5
 
-		go func(beatNo int, totalNo int, bpm float64, t float64, val float64) {
+		go func(barNo int, beatNo int, totalNo int, bpm float64, t float64, val float64) {
 			msg := osc.NewMessage("/osc/timer")
 			msg.Append(t)
 			msg.Append(int32(barNo))
@@ -173,26 +240,27 @@ func main() {
 				fmt.Println("There was an error sending OSC message:", err)
 			}
 
-		}(beatNo, totalNo, *bpm, t, val)
+		}(barNo, beatNo, totalNo, *bpm, t, val)
 
 		if totalNo%100 == 0 {
-			go func(_offset time.Time) {
+			go func() {
 				off, err := getOffset()
 				if err != nil {
-
-					_offset = time.UnixMicro(off)
-					time.Sleep(1 * time.Second)
+					fmt.Println("offset refresh failed:", err)
+					return
 				}
-			}(offset)
+				setClockOffset(time.Duration(off) * time.Microsecond)
+				fmt.Printf("refreshed clock offset %v\n", clockOffset())
+			}()
 		}
 
 		if beatNo == 0 {
-			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
+			color.Green("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), clockOffset()+drift, val, *bpm, barNo, beatNo, totalNo)
 			if *sound {
-				go runBeep("beep/sound.wav")
+				go runBeep(filepath.Join(beepDir(), "beep", "sound.wav"))
 			}
 		} else {
-			fmt.Printf("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), ntpTime.ClockOffset+drift, val, *bpm, barNo, beatNo, totalNo)
+			fmt.Printf("T:%f UTC:%v OFFSET: %v VAL:%v BPM: %f BAR:%04d BEAT:%04d TOTAL:%08d\n", t, elapsed.Round(time.Duration(1*time.Millisecond)), clockOffset()+drift, val, *bpm, barNo, beatNo, totalNo)
 		}
 
 		// calculate drift correction
@@ -237,6 +305,10 @@ func sendToBroadcast(client *osc.Client, address string, msg *osc.Message) error
 }
 
 func calculateBeats(elapsed time.Duration, bpm float64, beatsPerBar int) (int, int, int) {
+	if beatsPerBar <= 0 {
+		beatsPerBar = 1
+	}
+
 	totalMinutes := elapsed.Minutes()
 	totalBeats := int(totalMinutes * bpm)
 	barNo := totalBeats / beatsPerBar
